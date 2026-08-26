@@ -1,0 +1,11 @@
+# macOS noise
+.DS_Store
+
+# Editor swap and backup files
+*.swp
+*.swo
+*~
+
+# Secrets that must not enter the repository
+.env
+*.local
