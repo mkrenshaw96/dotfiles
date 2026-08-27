@@ -1,0 +1,13 @@
+git:
+  pagers:
+    - colorArg: always
+      pager: delta --paging=never
+  skipHookPrefix: "-"
+os:
+  editPreset: "nvim-remote"
+gui:
+  showFileTree: false
+  nerdFontsVersion: "3"
+keybinding:
+  universal:
+    quit-alt1: "<esc>" # alternative/alias of quit
