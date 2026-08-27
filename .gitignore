@@ -9,3 +9,5 @@
 # Secrets that must not enter the repository
 .env
 *.local
+
+.config/tmux/plugins
