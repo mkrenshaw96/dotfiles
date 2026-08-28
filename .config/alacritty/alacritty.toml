@@ -13,10 +13,10 @@ padding = { x = 12, y = 12 }
 dimensions = { columns = 120, lines = 40 }
 
 [font]
-normal = { family = "Maple Mono NF", style = "Medium" }
-italic = { family = "Maple Mono NF", style = "Medium Italic" }
-bold = { family = "Maple Mono NF", style = "Heavy" }
-bold_italic = { family = "Maple Mono NF", style = "Heavy Italic" }
+normal = { family = "JetbrainsMono Nerd Font", style = "Medium" }
+italic = { family = "JetbrainsMono Nerd Font", style = "Medium Italic" }
+bold = { family = "JetbrainsMono Nerd Font", style = "Heavy" }
+bold_italic = { family = "JetbrainsMono Nerd Font", style = "Heavy Italic" }
 size = 9.5
 
 
