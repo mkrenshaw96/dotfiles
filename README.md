@@ -18,6 +18,7 @@ stow . -t ~
 ## Software
 
 - Terminal: [Alacritty](https://github.com/alacritty/alacritty)
+- Font: [Maple Mono](https://github.com/subframe7536/maple-font)
 - Colors: [catppuccin](https://github.com/catppuccin/catppuccin)
 - Shell: [zsh](https://github.com/ohmyzsh/ohmyzsh/)
 - Multiplexer: [tmux](https://github.com/tmux/tmux)

@@ -145,6 +145,7 @@ cask "tableplus"
 cask "visual-studio-code"
 # GPU-accelerated cross-platform terminal emulator and multiplexer
 cask "wezterm"
+cask "font-maple-mono-nf"
 vscode "aaron-bond.better-comments"
 vscode "batisteo.vscode-django"
 vscode "bradlc.vscode-tailwindcss"
