@@ -83,12 +83,9 @@ alias cl="clear"
 alias lg="lazygit"
 
 
-# --- Jellyfish --- #
-alias sso="aws sso logout && aws sso login"
-alias p='pdm run'
-alias m='p python manage.py'
-alias t='p pytest --reuse-db --ds=jellyfish.settings.test'
-# --- Jellyfish --- #
+# --- Allera --- #
+alias sso="aws sso logout && aws sso login --sso-session allera"
+# --- Allera --- #
 
 # ~~~~~~~~~~~~~~~ Aliases ~~~~~~~~~~~~~~~~~~~~~~~~
 
