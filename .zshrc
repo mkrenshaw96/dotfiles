@@ -33,11 +33,6 @@ export FZF_DEFAULT_OPTS='--height 40% --tmux bottom,40% --layout reverse --borde
 export BAT_THEME="Catppuccin Mocha"
 export DISABLE_AUTO_UPDATE="true" # to update run "omz update"
 
-# --- Jellyfish --- #
-export SOURCE_CODE_DIR="$HOME/code"
-export JF_MANAGED_HOMEBREW="true"
-export DIRENV_LOG_FORMAT=''
-# --- Jellyfish --- #
 
 # ~~~~~~~~~~~~~~~ Environment Variables ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -168,116 +163,6 @@ kill-port() { (npx kill-port "$1"); }
 # https://mischavandenburg.com/zet/slash-syntax-replace/
 path() {
     echo -e ${PATH//:/\\n}
-}
-
-# Shell plus
-sp() {
-    COMPANY_SLUG=$(gum input --header "Enter a company slug..." --value "orthogonal-networks")
-
-    if [ -z "$COMPANY_SLUG" ]; then
-        echo "Nothing selected. Exiting..."
-        return 1
-    fi
-
-    cd ~/code/jellyfish && m shell_plus -c "$COMPANY_SLUG"
-}
-
-# Switch to a remote database
-swdb() {
-    CHOICE=$(gum choose --header "Choose a database..." "local" "stg-umibozu" "stg-sandbox-ro-1" "stg-sandbox-2" "stg-sandbox-3" "stg-sandbox-4" "stg-sandbox-5" "stg-sandbox-6" "stg-sandbox-7" "stg-sandbox-8" "stg-looking-glass" "stg-looking-glass-2")
-
-    if [ -z "$CHOICE" ]; then
-        echo "Nothing selected. Exiting..."
-        return 1
-    fi
-
-    cd ~/code/jellyfish && scripts/switchdb "$CHOICE"
-}
-
-shdb() {
-    cd ~/code/jellyfish && scripts/switchdb show
-}
-
-# Change PGPASSWORD for connecting to remote dbs
-pgp() {
-    CHOICE=$(gum choose --header "Choose one..." "local" "remote")
-
-    if [ "$CHOICE" = "local" ]; then
-        export PGPASSWORD=jellyfish
-    else
-        export PGPASSWORD=$(gum spin --spinner dot -- aws secretsmanager get-secret-value --secret-id $DB_CREDS_SECRET_ARN --query SecretString --output text)
-    fi
-}
-
-# SSH into a staging environment
-stg-ssh() {
-    CHOICE=$(gum choose --header "Choose an environment..." "stg-umibozu" "stg-sandbox-ro-1" "stg-sandbox-2" "stg-sandbox-3" "stg-sandbox-4" "stg-sandbox-5" "stg-sandbox-6" "stg-sandbox-7" "stg-sandbox-8" "stg-looking-glass" "stg-looking-glass-2")
-
-    if [ -z "$CHOICE" ]; then
-        echo "Nothing selected. Exiting..."
-        return 1
-    fi
-
-    cd ~/code/jellyfish && scripts/ssh -e "$CHOICE"
-}
-
-# SSH into production
-p-ssh() {
-    if ! gum confirm "Woahhh there buddy. You chose prd. You sure about that?" --default="No"; then
-        echo "Exiting..."
-        return 1
-    fi
-
-    cd ~/code/jellyfish && scripts/ssh -e prd
-}
-
-# Deploy a commit SHA to a staging environment
-stg-dp() {
-    CHOICE=$(gum choose --header "Choose an environment..." "stg-umibozu" "stg-sandbox-ro-1" "stg-sandbox-2" "stg-sandbox-3" "stg-sandbox-4" "stg-sandbox-5" "stg-sandbox-6" "stg-sandbox-7" "stg-sandbox-8" "stg-looking-glass" "stg-looking-glass-2")
-
-    if [ -z "$CHOICE" ]; then
-        echo "Nothing selected. Exiting..."
-        return 1
-    fi
-
-    COMMIT_SHA=$(gum input --header "Enter commit SHA...")
-
-    if [ -z "$COMMIT_SHA" ]; then
-        echo "Nothing selected. Exiting..."
-        return 1
-    fi
-
-    cd ~/code/jellyfish && m staging deploy -e "$CHOICE" --deploy-type sha --deploy-value "$COMMIT_SHA"
-}
-
-# Deploy a db snapshot tier to a staging database
-stg-db() {
-    CHOICE=$(gum choose --header "Choose a database..." "stg-umibozu" "stg-sandbox-ro-1" "stg-sandbox-2" "stg-sandbox-3" "stg-sandbox-4" "stg-sandbox-5" "stg-sandbox-6" "stg-sandbox-7" "stg-sandbox-8" "stg-looking-glass" "stg-looking-glass-2")
-
-    if [ -z "$CHOICE" ]; then
-        echo "Nothing selected. Exiting..."
-        return 1
-    fi
-
-    TIER_CHOICE=$(gum choose --header "Choose snapshot tier..." "small" "medium" "large" "prd")
-
-    if [ -z "$TIER_CHOICE" ]; then
-        echo "Nothing selected. Exiting..."
-        return 1
-    fi
-
-    if [ "$TIER_CHOICE" = "prd" ]; then
-        if ! gum confirm "Woahhh there buddy. You chose prd. You sure about that?" --default="No"; then
-            echo "Exiting..."
-            return 1
-        fi
-    fi
-
-    cd ~/code/jellyfish && m staging database -e "$CHOICE" --snapshot-tier "$TIER_CHOICE"
-}
-
-spa() {
-  cd ~/code/jellyfish && m shell_plus -c None --command "count = JFUser.objects.filter(email='michael.crenshaw@jellyfish.co').update(is_admin=True); print(f'{count} user(s) updated.')"
 }
 
 # ~~~~~~~~~~~~~~~ Scripts ~~~~~~~~~~~~~~~~~~~~~~~~
