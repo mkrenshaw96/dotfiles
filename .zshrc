@@ -165,5 +165,18 @@ path() {
     echo -e ${PATH//:/\\n}
 }
 
+# Switch to an AWS profile
+swp() {
+    CHOICE=$(gum choose --header "Choose a profile..." "allera-dev" "allera-deploy")
+
+    if [ -z "$CHOICE" ]; then
+        echo "Nothing selected. Exiting..."
+        return 1
+    fi
+
+    export AWS_PROFILE="$CHOICE"
+}
+
+
 # ~~~~~~~~~~~~~~~ Scripts ~~~~~~~~~~~~~~~~~~~~~~~~
 
