@@ -1,0 +1,27 @@
+# Ghostty config - mirrors ~/.config/alacritty/alacritty.toml
+theme = gruvchad
+
+# Window
+window-decoration = false
+window-padding-balance = true
+maximize = true
+
+# Hide border
+macos-window-shadow = false
+
+# Pair it with base padding if you want permanent breathing room
+window-padding-x = 12
+window-padding-y = 12
+
+# Distribute leftover window pixels evenly to center text
+window-padding-balance = true
+
+# Font
+font-family = JetBrainsMono Nerd Font Mono
+font-size = 9.5
+font-thicken = true
+
+# Keybindings
+keybind = shift+enter=text:\x1b\r
+
+macos-option-as-alt = right
