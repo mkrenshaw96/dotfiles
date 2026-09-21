@@ -332,8 +332,7 @@ return {
 				handlebars = { "prettierd" },
 				toml = { "prettierd" },
 				svelte = { "prettierd" },
-				-- Python is formatted by AutoCMD using black
-				-- python = { "black" },
+				python = { "black" },
 			},
 			format_on_save = {
 				timeout_ms = 500,

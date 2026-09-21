@@ -10,10 +10,3 @@ autocmd("TextYankPost", {
 		vim.highlight.on_yank()
 	end,
 })
-
--- Black format on save using local black installation
-autocmd("BufWritePost", {
-	group = vim.api.nvim_create_augroup("BlackFormatter", { clear = true }),
-	pattern = "*.py",
-	command = [[:silent !black %]],
-})

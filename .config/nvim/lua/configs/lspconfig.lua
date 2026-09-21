@@ -15,6 +15,7 @@ M.servers = {
 	"bashls",
 	"rust_analyzer",
 	"omnisharp",
+	"marksman",
 }
 
 M.setup = function()
@@ -30,9 +31,6 @@ M.setup = function()
 	}
 
 	vim.lsp.config.basedpyright = {
-		-- Override basedpyright-langserver with local basedbasedpyrigth-langserver symlinked binary.
-		-- To link, run `npm link` in ~/personal-projects/basedpyright/packages/pyright
-		cmd = { "basedbasedpyright-langserver", "--stdio" },
 		settings = {
 			basedpyright = {
 				analysis = {
