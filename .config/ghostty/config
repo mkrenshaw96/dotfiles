@@ -22,6 +22,4 @@ font-size = 9.5
 font-thicken = true
 
 # Keybindings
-keybind = shift+enter=text:\x1b\r
-
 macos-option-as-alt = right
