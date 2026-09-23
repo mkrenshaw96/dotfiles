@@ -88,6 +88,33 @@ return {
 		cmd = "Oil",
 	},
 	{
+		"nvim-telescope/telescope.nvim",
+		opts = function()
+			local conf = require "nvchad.configs.telescope"
+
+			-- Match the oil.nvim view: show hidden files, hide .git and .DS_Store.
+			conf.defaults.file_ignore_patterns = { "^%.git/", "/%.git/", "%.DS_Store$" }
+
+			-- live_grep and grep_string read this list. --hidden searches dotfiles.
+			conf.defaults.vimgrep_arguments = {
+				"rg",
+				"--color=never",
+				"--no-heading",
+				"--with-filename",
+				"--line-number",
+				"--column",
+				"--smart-case",
+				"--hidden",
+			}
+
+			conf.pickers = vim.tbl_deep_extend("force", conf.pickers or {}, {
+				find_files = { hidden = true },
+			})
+
+			return conf
+		end,
+	},
+	{
 		"folke/flash.nvim",
 		event = "VeryLazy",
 		-- @type Flash.Config
