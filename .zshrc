@@ -106,7 +106,7 @@ autoload -U +X bashcompinit && bashcompinit
 # Only run compinit without -C if it's been 24 hours since the dumpfile was last opened. Source: https://notes.billmill.org/computer_usage/zsh/profiling_zsh_startup.html
 autoload -Uz compinit
 for dump in ~/.zcompdump(N.mh+24); do
-  compinit
+  compinit -u
 done
 compinit -C
 
