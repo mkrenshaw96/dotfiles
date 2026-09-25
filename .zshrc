@@ -28,7 +28,6 @@ export XDG_CONFIG_HOME="$HOME/.config"
 export ZSH="$HOME/.oh-my-zsh"
 export ZSH_DISABLE_COMPFIX="true" # see https://github.com/ohmyzsh/ohmyzsh/issues/6835#issuecomment-390216875
 export GOBIN="$HOME/.local/bin"
-export GOPATH="$HOME/go/"
 export FZF_DEFAULT_OPTS='--height 40% --tmux bottom,40% --layout reverse --border top --style minimal'
 export BAT_THEME="Catppuccin Mocha"
 export DISABLE_AUTO_UPDATE="true" # to update run "omz update"
