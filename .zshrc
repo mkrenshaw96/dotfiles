@@ -128,13 +128,11 @@ zstyle ':completion:*' menu select
 source $ZSH/oh-my-zsh.sh
 source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-# source $(brew --prefix)/opt/zsh-vi-mode/share/zsh-vi-mode/zsh-vi-mode.plugin.zsh
 # Set up fzf key bindings and fuzzy completion
 source <(fzf --zsh)
 
 eval "$(zoxide init zsh)"
 eval "$(direnv hook zsh)"
-eval "$(mise activate zsh)"
 
 # ~~~~~~~~~~~~~~~ Sourcing ~~~~~~~~~~~~~~~~~~~~~~~~
 
