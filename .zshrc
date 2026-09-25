@@ -21,7 +21,6 @@ export PATH
 
 # ~~~~~~~~~~~~~~~ Environment Variables ~~~~~~~~~~~~~~~~~~~~~~~~
 
-# export TERM="tmux-256color" -- set by alacritty
 export VISUAL="nvim"
 export EDITOR="nvim"
 export XDG_CONFIG_HOME="$HOME/.config"
