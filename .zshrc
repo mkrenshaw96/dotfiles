@@ -53,11 +53,7 @@ setopt SHARE_HISTORY      # Share history between sessions
 
 PURE_GIT_PULL=0
 
-if [[ "$OSTYPE" == darwin* ]]; then
-  fpath+=("$(brew --prefix)/share/zsh/site-functions")
-else
-  fpath+=($HOME/.zsh/pure)
-fi
+fpath+=("$(brew --prefix)/share/zsh/site-functions")
 
 # change the path color
 zstyle :prompt:pure:path color white
