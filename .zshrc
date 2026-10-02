@@ -8,6 +8,7 @@ path=(
     $path                           
     $HOME/bin
     $HOME/.local/bin
+    $HOME/.docker/bin
 )
 
 # Remove duplicate entries and non-existent directories
