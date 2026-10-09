@@ -168,6 +168,56 @@ swp() {
     export AWS_PROFILE="$CHOICE"
 }
 
+# Open a Claude Code worktree in a tmux session: a shell on the left, Claude on the right
+cw() {
+    local name="$1"
+
+    if [ -z "$name" ]; then
+        echo "Usage: cw <worktree-name>"
+        return 1
+    fi
+
+    local git_common_dir
+    git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" || {
+        echo "Not in a git repository"
+        return 1
+    }
+
+    local repo_root="${git_common_dir:h}"
+
+    local worktree_path="$repo_root/.claude/worktrees/$name"
+
+    # Same name the repo's WorktreeRemove hook kills
+    local session="${${name:t}//[.:]/-}"
+
+    # A locked worktree makes the WorktreeRemove hook fail before it kills the session
+    local lock_reason="cw: keep on Claude exit"
+
+    if ! tmux has-session -t "=$session" 2>/dev/null; then
+        # The Claude pane drops to a shell when Claude exits, so the pane stays open
+        if [ -d "$worktree_path" ]; then
+            git -C "$repo_root" worktree lock --reason "$lock_reason" "$worktree_path" 2>/dev/null
+
+            tmux new-session -d -s "$session" -c "$worktree_path"
+
+            tmux split-window -h -t "=$session:" -c "$worktree_path" "claude; exec \$SHELL -l"
+        else
+            # Retries until Claude creates the worktree and git releases its own temporary lock
+            tmux new-session -d -s "$session" -c "$repo_root" \
+                "until git -C '$repo_root' worktree lock --reason '$lock_reason' '$worktree_path' 2>/dev/null; do sleep 0.5; done; cd '$worktree_path' && exec \$SHELL -l"
+
+            tmux split-window -h -t "=$session:" -c "$repo_root" \
+                "claude -w '$name'; cd '$worktree_path' 2>/dev/null || cd '$repo_root'; exec \$SHELL -l"
+        fi
+    fi
+
+    if [ -n "$TMUX" ]; then
+        tmux switch-client -t "=$session"
+    else
+        tmux attach-session -t "=$session"
+    fi
+}
+
 
 # ~~~~~~~~~~~~~~~ Scripts ~~~~~~~~~~~~~~~~~~~~~~~~
 
