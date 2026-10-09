@@ -1,0 +1,124 @@
+#!/usr/bin/env zsh
+
+# Create a git worktree and open it in a tmux session named "<branch> (<repo>)"
+# Usage: wt [-c] <branch> [base]    -c adds a Claude pane on the right
+#        wt rm [-f] <branch>        -f removes a worktree with changes
+wt() {
+  local remove=false
+  local force=false
+  local with_claude=false
+
+  if [ "$1" = "rm" ]; then
+    remove=true
+    shift
+  fi
+
+  local positional=()
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+    -c) with_claude=true ;;
+    -f) force=true ;;
+    *) positional+=("$1") ;;
+    esac
+
+    shift
+  done
+
+  local branch="${positional[1]}"
+
+  local base="${positional[2]:-HEAD}"
+
+  if [ -z "$branch" ]; then
+    echo "Usage: wt [-c] <branch> [base]"
+    echo "       wt rm [-f] <branch>"
+    return 1
+  fi
+
+  local git_common_dir
+  git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" || {
+    echo "Not in a git repository"
+    return 1
+  }
+
+  local repo_root="${git_common_dir:h}"
+
+  local repo_name="${repo_root:t}"
+
+  local worktrees_dir="$HOME/code/worktrees/$repo_name"
+
+  if [ -d "$repo_root/.claude" ]; then
+    worktrees_dir="$repo_root/.claude/worktrees"
+  fi
+
+  local worktree_path="$worktrees_dir/${branch//\//-}"
+
+  # tmux reads "." and ":" in a target as window and pane separators
+  local session="${branch//[.:]/-} (${repo_name//[.:]/-})"
+
+  if $remove; then
+    local remove_flags=()
+
+    if $force; then
+      remove_flags+=(--force)
+    fi
+
+    git -C "$repo_root" worktree remove "${remove_flags[@]}" "$worktree_path" || return 1
+
+    echo "Removed worktree $worktree_path"
+
+    git -C "$repo_root" branch -d "$branch" || echo "Kept branch $branch"
+
+    # Last, because this can kill the shell that runs wt
+    tmux kill-session -t "=$session" 2>/dev/null
+
+    return 0
+  fi
+
+  if [ ! -d "$worktree_path" ]; then
+    if [ "$worktrees_dir" = "$repo_root/.claude/worktrees" ]; then
+      # Claude Code deletes stale worktrees with names like these
+      if [[ "${worktree_path:t}" =~ '^(agent-a[0-9a-f]{7}|agent-a[0-9a-f]{16}|wf_[0-9a-f]{8}-[0-9a-f]{3}-[0-9]+|wf-[0-9]+|bridge-[A-Za-z0-9_-]+|job-.+-[0-9a-f]{8}|bg-.+-[0-9a-f]{8})$' ]]; then
+        echo "Claude Code can delete a worktree named ${worktree_path:t}. Use a different branch name."
+        return 1
+      fi
+
+      if ! git -C "$repo_root" check-ignore -q ".claude/worktrees/${worktree_path:t}"; then
+        mkdir -p "$git_common_dir/info"
+
+        echo "/.claude/worktrees/" >>"$git_common_dir/info/exclude"
+      fi
+    fi
+
+    if git -C "$repo_root" show-ref --verify --quiet "refs/heads/$branch"; then
+      git -C "$repo_root" worktree add "$worktree_path" "$branch" || return 1
+    elif git -C "$repo_root" show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+      git -C "$repo_root" worktree add -b "$branch" "$worktree_path" "origin/$branch" || return 1
+    else
+      git worktree add -b "$branch" "$worktree_path" "$base" || return 1
+    fi
+
+    local setup_script="$repo_root/.claude/scripts/setup-worktree-env.sh"
+
+    if [ -f "$setup_script" ]; then
+      bash "$setup_script" "$worktree_path" || echo "setup-worktree-env.sh failed"
+    fi
+  fi
+
+  if ! tmux has-session -t "=$session" 2>/dev/null; then
+    tmux new-session -d -s "$session" -c "$worktree_path"
+  fi
+
+  # The Claude pane drops to a shell when Claude exits, so the pane stays open
+  if $with_claude && [ "$(tmux display-message -p -t "=$session:" '#{window_panes}')" = "1" ]; then
+    tmux split-window -h -t "=$session:" -c "$worktree_path" "claude; exec \$SHELL -l"
+  fi
+
+  if [ -n "$TMUX" ]; then
+    tmux switch-client -t "=$session"
+  else
+    tmux attach-session -t "=$session"
+  fi
+}
+
+wt "$@"
