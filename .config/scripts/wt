@@ -67,8 +67,6 @@ wt() {
 
     echo "Removed worktree $worktree_path"
 
-    git -C "$repo_root" branch -d "$branch" || echo "Kept branch $branch"
-
     # Last, because this can kill the shell that runs wt
     tmux kill-session -t "=$session" 2>/dev/null
 
