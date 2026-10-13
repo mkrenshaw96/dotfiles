@@ -389,10 +389,15 @@ return {
 				svelte = { "prettierd" },
 				python = { "black" },
 			},
-			format_on_save = {
-				timeout_ms = 500,
-				lsp_fallback = true,
-			},
+			format_on_save = function(bufnr)
+				vim.api.nvim_buf_call(bufnr, function()
+					if vim.fn.exists ":LspEslintFixAll" == 2 then
+						vim.cmd "LspEslintFixAll"
+					end
+				end)
+
+				return { timeout_ms = 500, lsp_format = "fallback" }
+			end,
 		},
 	},
 }
