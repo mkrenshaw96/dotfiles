@@ -181,5 +181,45 @@ lg() {
     fi
 }
 
+# Diff a branch or commit against a base (defaults to the latest origin default branch)
+# Uses the three-dot form so it only shows the changes made since the merge base, like a PR
+gd() {
+    local target="$1"
+    local base="$2"
+    local ref
+
+    if [ -z "$target" ]; then
+        echo "Usage: gd <branch|sha> [base branch|sha]"
+        return 1
+    fi
+
+    if [ -z "$base" ]; then
+        base=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD)
+
+        # origin/HEAD is only set on clone, so ask the remote when it is missing
+        if [ -z "$base" ]; then
+            git remote set-head origin --auto > /dev/null 2>&1
+
+            base=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD)
+        fi
+
+        if [ -z "$base" ]; then
+            echo "Could not detect the default branch for origin. Pass a base branch or commit."
+            return 1
+        fi
+
+        git fetch --quiet origin "${base#origin/}" || echo "Could not fetch $base. Using the local ref."
+    fi
+
+    for ref in "$base" "$target"; do
+        if ! git rev-parse --verify --quiet "$ref^{commit}" > /dev/null; then
+            echo "Unknown branch or commit: $ref"
+            return 1
+        fi
+    done
+
+    git diff --stat -p "$base...$target" --
+}
+
 # ~~~~~~~~~~~~~~~ Scripts ~~~~~~~~~~~~~~~~~~~~~~~~
 
