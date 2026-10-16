@@ -1,0 +1,198 @@
+#!/usr/bin/env zsh
+
+# Print "<pid>\t<command>" for each process whose working directory is in the worktree
+list_worktree_processes() {
+  local worktree_path="$1"
+
+  local ancestor_pids=()
+
+  local pid=$$
+
+  local lsof_output
+
+  local line
+  local process_id=""
+  local process_cwd
+  local command_name
+
+  # Skip wtr and the shells that run it
+  while [ -n "$pid" ] && [ "$pid" -gt 1 ]; do
+    ancestor_pids+=("$pid")
+
+    pid="$(ps -o ppid= -p "$pid" | tr -d ' ')"
+  done
+
+  # Read the output first, so lsof exits and does not list itself
+  lsof_output="$(lsof -d cwd -Fpn 2>/dev/null)"
+
+  while IFS= read -r line; do
+    case "$line" in
+    p*) process_id="${line#p}" ;;
+    n*)
+      process_cwd="${line#n}"
+
+      if [ "$process_cwd" != "$worktree_path" ] && [[ "$process_cwd" != "$worktree_path"/* ]]; then
+        continue
+      fi
+
+      if ((${ancestor_pids[(Ie)$process_id]})); then
+        continue
+      fi
+
+      command_name="$(ps -o comm= -p "$process_id")"
+
+      # The process exited after lsof ran
+      if [ -z "$command_name" ]; then
+        continue
+      fi
+
+      # Login shells show as "-zsh"
+      command_name="${${command_name:t}#-}"
+
+      # An idle shell holds no work, and wtr kills the tmux session shells anyway
+      case "$command_name" in
+      zsh | bash | sh | fish | dash) continue ;;
+      esac
+
+      # A tab, because command names can hold spaces, such as "Code Helper (Plugin)"
+      print -r -- "$process_id"$'\t'"$command_name"
+      ;;
+    esac
+  done <<<"$lsof_output"
+}
+
+# Choose a git worktree with gum, then remove it and its tmux session
+# Usage: wtr [-f]    -f removes a worktree with changes
+wtr() {
+  local force=false
+
+  while [ $# -gt 0 ]; do
+    case "$1" in
+    -f) force=true ;;
+    *)
+      echo "Usage: wtr [-f]"
+      return 1
+      ;;
+    esac
+
+    shift
+  done
+
+  local git_common_dir
+  git_common_dir="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" || {
+    echo "Not in a git repository"
+    return 1
+  }
+
+  local repo_root="${git_common_dir:h}"
+
+  local repo_name="${repo_root:t}"
+
+  local worktree_paths=()
+  local worktree_branches=()
+  local worktree_labels=()
+
+  local record_index=0
+  local record_path=""
+  local record_branch=""
+
+  local line
+
+  # Porcelain output ends each worktree record with a blank line
+  while IFS= read -r line; do
+    case "$line" in
+    "worktree "*) record_path="${line#worktree }" ;;
+    "branch refs/heads/"*) record_branch="${line#branch refs/heads/}" ;;
+    "")
+      record_index=$((record_index + 1))
+
+      # The first record is the main worktree, which git cannot remove
+      if [ "$record_index" -gt 1 ]; then
+        worktree_paths+=("$record_path")
+
+        worktree_branches+=("$record_branch")
+
+        worktree_labels+=("${record_branch:-${record_path:t} (detached)}")
+      fi
+
+      record_path=""
+
+      record_branch=""
+      ;;
+    esac
+  done < <(git -C "$repo_root" worktree list --porcelain)
+
+  if [ ${#worktree_labels[@]} -eq 0 ]; then
+    echo "No worktrees to remove"
+    return 1
+  fi
+
+  local choice
+  choice="$(gum choose --header "Choose a worktree to remove..." "${worktree_labels[@]}")"
+
+  if [ -z "$choice" ]; then
+    echo "Nothing selected. Exiting..."
+    return 1
+  fi
+
+  local choice_index="${worktree_labels[(Ie)$choice]}"
+
+  local worktree_path="${worktree_paths[$choice_index]}"
+
+  local branch="${worktree_branches[$choice_index]}"
+
+  # lsof reports resolved paths, such as /private/tmp for /tmp
+  local worktree_processes=(${(f)"$(list_worktree_processes "${worktree_path:A}")"})
+
+  local claude_processes=(${(M)worktree_processes:#*$'\t'claude})
+
+  local other_processes=(${worktree_processes:#*$'\t'claude})
+
+  local remove_flags=()
+
+  if ((${#claude_processes[@]})); then
+    echo "Claude Code sessions are open in $worktree_path:"
+
+    print -rl -- "${claude_processes[@]}" | gum table --print --separator=$'\t' --columns="PID,Command"
+  fi
+
+  if ((${#other_processes[@]})); then
+    echo "Processes are running in $worktree_path:"
+
+    print -rl -- "${other_processes[@]}" | gum table --print --separator=$'\t' --columns="PID,Command"
+  fi
+
+  if ((${#worktree_processes[@]})) && ! gum confirm "Remove the worktree anyway?" --default=false; then
+    echo "No was selected. Exiting..."
+    return 1
+  fi
+
+  if $force; then
+    remove_flags+=(--force)
+  fi
+
+  if ! gum spin --show-error --title "Removing worktree..." -- git -C "$repo_root" worktree remove "${remove_flags[@]}" "$worktree_path"; then
+    if $force || ! gum confirm "Force remove the worktree and lose its changes?" --default=false; then
+      return 1
+    fi
+
+    gum spin --show-error --title "Force removing worktree..." -- git -C "$repo_root" worktree remove --force "$worktree_path" || return 1
+  fi
+
+  echo "✅ Removed worktree $worktree_path"
+
+  # wt names a session after its branch, so a detached worktree has no session
+  if [ -z "$branch" ]; then
+    return 0
+  fi
+
+  # tmux reads "." and ":" in a target as window and pane separators
+  local session="${branch//[.:]/-} (${repo_name//[.:]/-})"
+
+  # Last, because this can kill the shell that runs wtr
+  tmux kill-session -t "=$session" 2>/dev/null
+
+  return 0
+}
+
+wtr "$@"

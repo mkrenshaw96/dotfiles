@@ -2,23 +2,36 @@
 
 # Create a git worktree and open it in a tmux session named "<branch> (<repo>)"
 # Usage: wt [-c] <branch> [base]    -c adds a Claude pane on the right
-#        wt rm [-f] <branch>        -f removes a worktree with changes
+#        wt                         asks for the branch and the Claude pane with gum
 wt() {
-  local remove=false
-  local force=false
   local with_claude=false
 
-  if [ "$1" = "rm" ]; then
-    remove=true
-    shift
-  fi
-
   local positional=()
+
+  local branch_input
+
+  # With no arguments, ask for the arguments, then parse them as usual
+  if [ $# -eq 0 ]; then
+    branch_input="$(gum input --header "Branch name" --placeholder "feature/my-branch")"
+
+    # Git branch names cannot hold whitespace
+    branch_input="${branch_input//[[:space:]]/}"
+
+    if [ -z "$branch_input" ]; then
+      echo "Nothing entered. Exiting..."
+      return 1
+    fi
+
+    set -- "$branch_input"
+
+    if gum confirm "Open a Claude pane?" --default=false; then
+      set -- -c "$branch_input"
+    fi
+  fi
 
   while [ $# -gt 0 ]; do
     case "$1" in
     -c) with_claude=true ;;
-    -f) force=true ;;
     *) positional+=("$1") ;;
     esac
 
@@ -31,7 +44,6 @@ wt() {
 
   if [ -z "$branch" ]; then
     echo "Usage: wt [-c] <branch> [base]"
-    echo "       wt rm [-f] <branch>"
     return 1
   fi
 
@@ -55,23 +67,6 @@ wt() {
 
   # tmux reads "." and ":" in a target as window and pane separators
   local session="${branch//[.:]/-} (${repo_name//[.:]/-})"
-
-  if $remove; then
-    local remove_flags=()
-
-    if $force; then
-      remove_flags+=(--force)
-    fi
-
-    git -C "$repo_root" worktree remove "${remove_flags[@]}" "$worktree_path" || return 1
-
-    echo "Removed worktree $worktree_path"
-
-    # Last, because this can kill the shell that runs wt
-    tmux kill-session -t "=$session" 2>/dev/null
-
-    return 0
-  fi
 
   if [ ! -d "$worktree_path" ]; then
     if [ "$worktrees_dir" = "$repo_root/.claude/worktrees" ]; then
