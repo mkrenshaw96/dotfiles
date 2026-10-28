@@ -1,0 +1,12 @@
+nerdfont: true # Enable nerdfont icons (prompted on first run)
+merge_strategy: rebase # Make workmux merge do rebase by default
+merge_keep: true # Keep worktree, window, and branch after merge by default
+confirm_unmerged_removal: false # Remove unmerged branches without confirmation
+agent: claude
+mode: session
+
+panes:
+  - command: nvim
+  - command: <agent>
+    split: horizontal
+    focus: true
