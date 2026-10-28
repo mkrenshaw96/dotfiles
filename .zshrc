@@ -76,6 +76,8 @@ alias v="nvim"
 alias cd="z"
 alias ls="eza --color=always --long --git --no-filesize --icons=always --no-time --no-user --no-permissions"
 alias cl="clear"
+alias claude-personal='CLAUDE_CONFIG_DIR=~/.claude-personal claude'
+alias wm="workmux"
 
 
 # --- Allera --- #
