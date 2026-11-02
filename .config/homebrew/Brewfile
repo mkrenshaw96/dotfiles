@@ -1,6 +1,7 @@
 tap "charmbracelet/tap"
 tap "homebrew/bundle"
 tap "jesseduffield/lazygit"
+tap "raine/workmux"
 # Automatic configure script builder
 brew "autoconf"
 # Library for command-line editing
@@ -129,6 +130,8 @@ brew "zsh-autosuggestions"
 brew "zsh-syntax-highlighting"
 # Better and friendly vi(vim) mode plugin for ZSH
 brew "zsh-vi-mode"
+# Opinionated workflow tool that orchestrates git worktrees and tmux
+brew "raine/workmux/workmux"
 # GPU-accelerated terminal emulator
 cask "alacritty"
 # Terminal-based AI coding assistant

@@ -11,3 +11,6 @@
 *.local
 
 .config/tmux/plugins
+
+# Homebrew trust store lock file
+.config/homebrew/trust.json.lock
