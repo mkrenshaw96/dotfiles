@@ -3,10 +3,29 @@ merge_strategy: rebase # Make workmux merge do rebase by default
 merge_keep: true # Keep worktree, window, and branch after merge by default
 confirm_unmerged_removal: false # Remove unmerged branches without confirmation
 agent: claude
-mode: session
+mode: window
+# mode: session
+window_placement: rightmost # Create new windows in the last position
+
+# Copy local env files into each new worktree. Patterns with no match are skipped.
+files:
+  copy:
+    - .env
+    - .env.local
+    - .env.me
+
+# Run the repo's worktree setup script when the repo has one.
+post_create:
+  - |
+    setup="$WM_WORKTREE_PATH/.claude/scripts/setup-worktree-env.sh"
+    if [ -f "$setup" ]; then
+      bash "$setup" "$WM_WORKTREE_PATH"
+    fi
 
 panes:
-  - command: nvim
-  - command: <agent>
-    split: horizontal
-    focus: true
+  - name: shell # No command, so the pane opens the default shell
+  # - command: <agent>
+  #   name: claude
+  #   focus: true
+  #   zoom: true
+  #   split: horizontal # Second pane with default shell
