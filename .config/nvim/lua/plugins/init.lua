@@ -325,6 +325,13 @@ return {
 		end,
 	},
 	{
+		"esmuellert/codediff.nvim",
+		cmd = "CodeDiff",
+		keys = {
+			{ "<leader>gg", "<cmd>CodeDiff<cr>", desc = "Open CodeDiff" },
+		},
+	},
+	{
 		"neovim/nvim-lspconfig",
 		config = function()
 			require("configs.lspconfig").setup()
